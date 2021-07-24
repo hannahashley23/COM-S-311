@@ -1,0 +1,121 @@
+import java.util.ArrayList;
+import java.util.PriorityQueue;
+import java.util.Scanner;
+
+class Main {
+
+	static class Vertex implements Comparable<Vertex> {
+
+		// adjacency list for each vertex object
+		ArrayList<Edge> adjList;
+
+		long distFromSource;
+
+		boolean visited;
+
+		Vertex(int u) {
+			adjList = new ArrayList<Edge>();
+			distFromSource = Integer.MAX_VALUE;
+			visited = false;
+		}
+
+		@Override
+		public int compareTo(Vertex other) {
+			return (int) (this.distFromSource - other.distFromSource);
+		}
+	}
+
+	static class Edge {
+		public int v;
+		public int w;
+		public long weight;
+
+		Edge(int v, int w, long weight) {
+			this.v = v;
+			this.w = w;
+			this.weight = weight;
+		}
+	}
+
+	// utilizes djikstra's algorithm to find the shortest path
+	static void djikstra(Vertex[] list, int s, int d) {
+
+		// create queue and add source node
+		PriorityQueue<Vertex> queue = new PriorityQueue<Vertex>();
+		queue.add(list[s]);
+		list[s].distFromSource = 0;
+
+		if (s == d) {
+			list[d].distFromSource = 0;
+			return;
+		}
+
+		while (!queue.isEmpty()) {
+			Vertex u = queue.remove();
+			u.visited = true;
+
+			for (Edge edge : u.adjList) {
+				Vertex v = list[edge.w];
+
+				// compare distances to source between u and v
+				if (u.distFromSource + edge.weight < v.distFromSource) {
+					v.distFromSource = u.distFromSource + edge.weight;
+					queue.add(v);
+				}
+			}
+		}
+	}
+
+	public static void main(String[] args) {
+
+		Scanner scnr = new Scanner(System.in);
+
+		int numTestCases = scnr.nextInt();
+		int currentTest = 1;
+
+		while (currentTest <= numTestCases) {
+
+			int numVertices = scnr.nextInt();
+			int numEdges = scnr.nextInt();
+			int source = scnr.nextInt();
+			int destination = scnr.nextInt();
+			Vertex[] vertices = new Vertex[numVertices];
+
+			// check if no edges exist, means no possible shortest path
+			if (numEdges == 0) {
+				System.out.println("Case #" + currentTest + ": unreachable");
+				currentTest++;
+				continue;
+			}
+			
+			for(int i = 0; i < numVertices; i++) {
+				vertices[i] = new Vertex(i);
+			}
+
+			// initialize edges
+			// add edges to respective adjacency lists
+			for (int i = 1; i <= numEdges; i++) {
+				int a = scnr.nextInt();
+				int b = scnr.nextInt();
+				long weight = scnr.nextInt();
+
+				// update adjacency lists
+				vertices[a].adjList.add(new Edge(a, b, weight));
+				vertices[b].adjList.add(new Edge(b, a, weight));
+			}
+
+			// run djikstra's algorithm
+			djikstra(vertices, source, destination);
+
+			if (vertices[destination].distFromSource == Integer.MAX_VALUE || numEdges == 0) {
+				System.out.println("Case #" + currentTest + ": unreachable");
+			}
+
+			else {
+				System.out.println("Case #" + currentTest + ": " + vertices[destination].distFromSource);
+			}
+			currentTest++;
+		}
+		scnr.close();
+	}
+}
