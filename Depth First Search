@@ -1,0 +1,217 @@
+import java.util.LinkedList;
+import java.util.Scanner;
+
+class Main {
+
+	static class Vertex {
+		int value;
+
+		Vertex(int u) {
+			value = u;
+		}
+
+		boolean cutNode = false;
+		boolean discovered = false;
+		boolean processed = false;
+		boolean root = false;
+		int entry = 0;
+		int exit = 0;
+		int children = 0;
+		Vertex ra;
+		Vertex parent;
+		LinkedList<Vertex> adjList = new LinkedList<Vertex>();
+
+		boolean equals(Vertex w) {
+			if (this.value == w.value) {
+				return true;
+			}
+			return false;
+		}
+	}
+
+	static boolean isLeaf(Vertex v) {
+		if (v.children == 0) {
+			return true;
+		}
+		return false;
+	}
+
+	static int findBridgeCN(Vertex[] tree) {
+		int numBCN = 0;
+
+		for (int i = 1; i < tree.length; i++) {
+
+			Vertex n = tree[i];
+
+			if (n.ra.equals(n) && !n.root) {
+				// n.parent is cut node
+				if (!n.parent.cutNode && !n.parent.root) {
+					n.parent.cutNode = true;
+					numBCN++;
+				}
+
+				if (!n.cutNode && !isLeaf(n)) {
+					n.cutNode = true;
+					numBCN++;
+				}
+			}
+		}
+		return numBCN;
+	}
+
+	static int findRootCN(Vertex[] tree) {
+		int numRCN = 0;
+
+		for (int i = 1; i < tree.length; i++) {
+			Vertex n = tree[i];
+
+			if (n.root && n.children > 1) {
+				numRCN++;
+			}
+		}
+		return numRCN;
+	}
+
+	static int findParentCN(Vertex[] tree) {
+		int numPCN = 0;
+
+		for (int i = 1; i < tree.length; i++) {
+			Vertex n = tree[i];
+
+			// if n.ra = n.parent AND n.parent is not root
+			if (!n.root) {
+				if (!n.parent.root && n.ra.equals(n.parent)) {
+					if (!n.parent.cutNode) {
+						// n.parent is cut node
+						n.parent.cutNode = true;
+						numPCN++;
+					}
+				}
+			}
+		}
+		return numPCN;
+	}
+
+	static int time = 1;
+
+	static void runDFS(Vertex[] tree, Vertex n) {
+		// pre node processing;
+		n.discovered = true;
+		n.entry = time;
+		n.ra = n;
+		time++;
+
+		// dfs
+		for (Vertex neighbor : n.adjList) {
+			
+			if (neighbor.value != n.parent.value) {
+				if (!neighbor.discovered && neighbor.value != n.parent.value) {
+					neighbor.parent = n;
+
+					processEdge(n, neighbor);
+					runDFS(tree, neighbor);
+					n.children++;
+
+				} else {
+					// must be a back edge
+					processEdge(n, neighbor);
+				}
+			}
+		}
+
+		//update reachable ancestors as the DFS works its way back up the graph
+		if (!n.root) {
+			if (n.parent.ra.entry > n.ra.entry) {
+				n.parent.ra = n.ra;
+			}
+		}
+		n.exit = time;
+		n.processed = true;
+		time++;
+	}
+
+	static void processEdge(Vertex x, Vertex y) {
+		//if true, (x, y) is a back edge
+		if (y.discovered && !y.processed) {
+			if (y.entry < x.ra.entry) {
+				x.ra = y;
+			}
+		}
+	}
+
+	public static void main(String[] args) {
+
+		//initial scanner to scan number of networks and first vertices in each line
+		Scanner scnr = new Scanner(System.in);
+
+		//while a next line exists
+		while (scnr.hasNext()) {
+			int numPlaces = scnr.nextInt();
+
+			//means the program is over, last line is 0
+			if (numPlaces == 0) {
+				break;
+			}
+
+			//builds a vertex graph from 1 to N
+			Vertex[] graph = new Vertex[numPlaces + 1];
+
+			for (int i = 1; i <= numPlaces; i++) {
+				graph[i] = new Vertex(i);
+			}
+
+			while (scnr.hasNext()) {
+
+				//first vertex in each line of input with edge information
+				int root = scnr.nextInt();
+
+				//means the current test case is over
+				if (root == 0) {
+					break;
+				}
+
+				int counter = 1;
+	
+				String line = scnr.nextLine();
+
+				//internal scanner to scan a specific line of edge input
+				Scanner lineScnr = new Scanner(line);
+
+				//while given line has more direct connections and connections < total number of places
+				//update adjacency lists
+				while (lineScnr.hasNext() && counter < (numPlaces)) {
+					int reachable = lineScnr.nextInt();
+					graph[root].adjList.add(graph[reachable]);
+					graph[reachable].adjList.add(graph[root]);
+					counter++;
+				}
+				lineScnr.close();
+			}
+
+			//set the root's parent = -1
+			graph[1].parent = new Vertex(-1);
+			graph[1].root = true;
+
+			//run a DFS on the graph starting at the vertex at index 1 (arbitrary)
+			runDFS(graph, graph[1]);
+			time = 0;
+			
+			int totalCutNodes = calculateCN(graph);
+
+			System.out.println(totalCutNodes);
+		}
+		scnr.close();
+	}
+	
+	//calls each smaller, distinct cut node methods
+	static int calculateCN(Vertex[] tree) {
+		int total = 0;
+		
+		total += findBridgeCN(tree);
+		total += findParentCN(tree);
+		total += findRootCN(tree);
+		
+		return total;
+		
+	}
+}
