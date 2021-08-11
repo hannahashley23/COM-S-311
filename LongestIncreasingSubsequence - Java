@@ -1,0 +1,115 @@
+package P481;
+
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class P481 {
+
+	//find longest increasing subsequence and returns an array storing the value
+	public static int[] compute(int[] arr) {
+
+		//stores single instance of increasing subsequence as the currentIndex moves along the array
+		//elements will either be appended or replaced within it
+		int tempLIS[] = new int[arr.length + 1];
+		
+		//keeps track of parent values for each index for later parts of the algorithm
+		int[] parent = new int[arr.length];
+		
+		//length of longest inc subsequence found so far
+		int len = 0;
+
+		//this loop runs in O(nlogn) time
+		for (int i = 0; i < arr.length; i++) {
+
+			//run a binary search O(logn)
+			//this will see whether the current element is worth adding to the array or if it 
+			//is too large to be added
+			int bottom = 1;
+			int top = len;
+
+			while (bottom <= top) {
+				int middle = (bottom + top) / 2;
+
+				if (arr[tempLIS[middle]] < arr[i]) {
+					bottom = middle + 1;
+				}
+				else {
+					top = middle - 1;
+				}
+			}
+
+			int currentIndex = bottom;
+			
+			//update max size of the lis
+			if (currentIndex > len) {
+				len = currentIndex;
+			}
+			
+			//add value to lis
+			tempLIS[currentIndex] = i;
+
+			//update parent values
+			parent[i] = tempLIS[currentIndex - 1];
+			
+		}
+
+		int m = tempLIS[len];
+		int longest[] = new int[len];
+
+		//traverse parent array to get actual values of stored LIS
+		for (int n = len - 1; n >= 0; n--) {
+
+			longest[n] = arr[m];
+			m = parent[m];
+		}
+		return longest;
+	}
+
+	//prints actual output
+	public static void printOutput(int[] nums) {
+
+		System.out.println(nums.length);
+		System.out.println("-");
+
+		for (int i = 0; i < nums.length; i++) {
+			System.out.println(nums[i]);
+		}
+	}
+
+	public static void main(String[] args) {
+
+		ArrayList<Integer> inputList = new ArrayList<Integer>();
+
+		Scanner scnr = new Scanner(System.in);
+
+		String s1;
+
+		while (scnr.hasNextLine()) {
+			s1 = scnr.nextLine();
+
+			if (s1.equals("")) {
+				break;
+			}
+			else {
+				int toAdd = Integer.parseInt(s1);
+				inputList.add(toAdd);
+			}
+		}
+
+		//converts arraylist to array to make computations easier
+		int[] inputArr = new int[inputList.size()];
+
+		for (int i = 0; i < inputList.size(); i++) {
+			inputArr[i] = inputList.get(i);
+		}
+
+		scnr.close();
+
+		//finds longest increasing subsequence
+		int[] lis = compute(inputArr);
+
+		//prints integer array of LIS in required format
+		printOutput(lis);
+	}
+}
+
