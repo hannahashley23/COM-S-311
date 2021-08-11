@@ -1,0 +1,83 @@
+package P11420;
+
+import java.util.Scanner;
+
+public class P11420 {
+
+	//dynamic programming table to store [num of drawers][num drawers to be secured][prev drawer unlocked(0) or locked(1)]
+	static long[][][] dp;
+
+	//method to calculate number of possible ways to secure s drawers in a chest of n drawers
+	public static void findWays(int n, int s) {
+
+		//cannot secure drawers if n < s
+		if(n < s) {
+			dp[n][s][0] = 0;
+			dp[n][s][1] = 0;
+		}
+		//cannot secure drawers if there are 0 drawers
+		else if(n == 0){
+			dp[n][s][0] = 0;
+			dp[n][s][1] = 0;
+		}
+		//base case
+		else if(n == s) {
+			dp[n][s][0] = 0;
+			dp[n][s][1] = 1;
+		}
+		//base case
+		else if(s == n-1) {
+			dp[n][s][0] = 1;
+			dp[n][s][1] = 0;
+		}
+		
+		//look up values in dynamic programming table
+		else if(s == 0) {
+			dp[n][s][0] = dp[n-1][s][0] + dp[n-1][s][1];
+			dp[n][s][1] = dp[n-1][s][0];
+		}
+		else {
+			dp[n][s][0] = dp[n-1][s][0] + dp[n-1][s][1];
+			dp[n][s][1] = dp[n-1][s-1][1] + dp[n-1][s][0];
+		}
+	}
+	
+	//method to calculate all values in dp table
+	//this makes lookup of values O(1) time
+	public static void createDP()
+	{
+		//1 <= n <= 65 and 1 <= s <= 65
+		dp = new long[66][66][2];
+		
+		//calculate each value in dp table (O(n*s)) time
+		for (int i = 0; i < 66; i++) {
+			for(int j = 0; j < 66; j++) {
+				findWays(i, j);
+			}
+		}
+	}
+	
+	public static void main(String[] args) {
+		
+		//create dp table and fill it
+		createDP();
+
+		Scanner scnr = new Scanner(System.in);
+
+		while (scnr.hasNextLine()) {
+			int n = scnr.nextInt();
+			int s = scnr.nextInt();
+
+			if (n < 1) {
+				break;
+			}
+
+			//simply look up values in table
+			else {
+				System.out.println(dp[n][s][0] + dp[n][s][1]);
+			}
+		}
+		scnr.close();
+	}
+}
+
