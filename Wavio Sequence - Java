@@ -1,0 +1,101 @@
+package P10534;
+
+import java.util.Scanner;
+
+class P10534 {
+
+	public static void main(String[] args) {
+
+		Scanner scnr = new Scanner(System.in);
+
+		while (scnr.hasNextInt()) {
+			int num = scnr.nextInt();
+			int[] givenArr = new int[num];
+
+			for (int i = 0; i < num; i++) {
+				givenArr[i] = scnr.nextInt();
+			}
+			int result = wavio(num, givenArr);
+			System.out.println(result);
+		}
+		scnr.close();
+	}
+	
+	//method to reverse array so that the longest decreasing subsequence can be found using same LIS algorithm
+	static int[] reverse(int[] arr, int n) {
+		int[] result = new int[n];
+		for (int i = 0; i < n; i++) {
+			int temp = arr[i];
+			//move backwards across result array
+			result[n - i - 1] = temp;
+		}
+		return result;
+	}
+
+	//finds size of wavio sequence in given integer array
+	static int wavio(int n, int[] arr) {
+		int[] reversedArr;
+		
+		//find increasing lis
+		int[] increasing = findLIS(arr);
+		
+		//reverse array and find lis from opposite direction
+		reversedArr = reverse(arr, n);
+		int[] decreasing = findLIS(reversedArr);
+		
+		//reverse reversed array so it's back in original position
+		decreasing = reverse(decreasing, n);
+		
+		int result = wavioLength(increasing, decreasing, n);
+			
+		return result;
+	}
+	
+	//finds actual wavio sequence length with total num of integers and the longest increasing and decreasing subsequences 
+	static int wavioLength(int[] incr, int[] decr, int n) {
+		int currentMax = 0;
+		
+		// update wavio sequence value
+		for (int i = 0; i < n; i++) {
+			currentMax = Math.max(2 * Math.min(incr[i], decr[i]) - 1, currentMax);
+		}
+		return currentMax;
+	}
+
+	//uses similar algorithm as P481 to find longest increasing subsequence using binary search
+	static int[] findLIS(int[] arr) {
+
+		int[] lis = new int[arr.length];
+		int[] tempLIS = new int[arr.length+1];
+		tempLIS[0] = Integer.MIN_VALUE;
+		
+		//initialize tempLIS and actual LIS values before binary search
+		for (int i = 1; i < arr.length+1; i++) {
+			lis[i-1] = 1;
+			tempLIS[i] = Integer.MAX_VALUE;
+		}
+		
+		//binary search
+		for (int i = 1; i < arr.length+1; i++) {
+			int middle;
+			int top = i;
+			int bottom = 0;
+			
+			//determines whether to append or replace item at current index in LIS
+			while (bottom <= top) {
+				middle = (bottom + top) / 2;
+				if (tempLIS[middle] < arr[i-1]) {
+					bottom = middle + 1;
+				}
+				else {
+					top = middle - 1;
+				}
+			}
+			
+			//update array values
+			tempLIS[bottom] = arr[i-1];
+			lis[i-1] = bottom;
+		}
+		return lis;
+	}
+}
